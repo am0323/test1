@@ -1,0 +1,1788 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+###############################################################################
+#
+# Copyright (c) 2005- Shinji Kashihara. All rights reserved.
+# orgThis program and the accompanying materials are
+# made available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at epl-v10.html.
+#
+###############################################################################
+#
+# IDEA Pleiades アスペクト設定ファイル
+#
+###############################################################################
+-->
+<pleiades>
+
+	<!-- Pleades runtime パッケージ -->
+	<property name="pleiades" value="jp.sourceforge.mergedoc.pleiades.runtime"/>
+
+	<!-- 翻訳クラス -->
+	<property name="translation.class" value="?{pleiades}.resource.Translations"/>
+
+	<!-- 計測クラス -->
+	<property name="analyses.class" value="?{pleiades}.Analyses"/>
+
+	<!--
+	###########################################################################
+	  IDEA 機能拡張
+	###########################################################################
+	-->
+
+	<!-- ヘルプ URL を日本語版に変更 -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			// IDEA
+			$1 = $1.replace("//www.jetbrains.com/help/", "//pleiades.io/help/");
+			$1 = $1.replaceFirst("//www\.jetbrains\.com/(.+?)/webhelp/", "//pleiades.io/help/$1/");
+			// Android Studio
+			$1 = $1.replaceFirst("//developer\.android\.com/r/studio-help/[^\?]+", "//pleiades.io/help/idea");
+			// PyCharm
+			$1 = $1.replace("//docs.python.org/", "//docs.python.org/ja/");
+			// PhpStorm
+			$1 = $1.replace("php.net/manual/en/", "php.net/manual/ja/");
+			$1 = $1.replaceFirst("(php\.net/.+?)(&amp;|&)lang=en", "$1&lang=ja");
+		]]></advice>
+
+		<jointPoint className="com.intellij.ide.BrowserUtil" methodName="browse" descriptor="(Ljava/lang/String;)V"/>
+
+	</pointCut>
+
+	<!-- ファイル > キャッシュの破棄 をトリガーに次回起動時の Pleiades キャッシュ破棄も指示 -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$_ = $proceed($$);
+			?{translation.class}.invalidateCache();
+		]]></advice>
+
+		<jointPoint className="com.intellij.openapi.vfs.newvfs.persistent.FSRecords" methodName="invalidateCaches">
+			<includeWhere className="com.intellij.ide.actions.InvalidateCachesAction"/>
+		</jointPoint>
+		<jointPoint className="com.intellij.util.indexing.FileBasedIndex" methodName="invalidateCaches">
+			<includeWhere className="com.intellij.ide.actions.InvalidateCachesAction"/>
+		</jointPoint>
+
+	</pointCut>
+
+	<!--
+	###########################################################################
+	  翻訳：メソッド呼び出し (editPoint="call")
+	###########################################################################
+	-->
+
+	<!-- メソッド呼び出し無効化 -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+		]]></advice>
+
+		<!-- フォント設定 -->
+		<jointPoint className="java.awt.Graphics" methodName="setFont">
+
+			<!-- 呼び出し元による限定：スプラッシュ > Expiration date が豆腐になるのを回避 -->
+			<includeWhere className="com.intellij.ui.Splash"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- キーテキストの日本語表記を英語に戻す -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$_ = $proceed($$);
+			if ("スペース".equals($_))
+				$_ = "Space";
+		]]></advice>
+
+		<!-- 実行構成 > Gradle-aware make > 編集 > "Code complation available (Ctrl + 空白)" の翻訳除外回避 -->
+		<jointPoint className="java.awt.event.KeyEvent" methodName="getKeyText"/>
+
+	</pointCut>
+
+	<!-- #################### START -->
+	<!-- 翻訳 (after) Java リソースバンドル / 2019.01.01 設定 > ツール > データベースが表示できない 限定に変更 -->
+	<!--
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$_ = $proceed($$);
+			if ($1 == null)
+				;
+			// 除外キー: ツール・ウィンドウ ID
+			else if ($1.startsWith("tool.window.name.") || $1.equals("android.logcat.title"))
+				;
+			// 除外キー: 設定 > ビルド > ビルド・ツール (設定が表示されなくなるのを回避)
+			else if ($1.equals("configurable.group.build.tools.settings.parent"))
+				;
+			// 除外キー: Pleiades ON/OFF 時に既存アプリケーション実行構成が ?Unknown になるのを回避 2018.07.27
+			else if ($1.endsWith("configuration.name"))
+				;
+			// 除外キー: 設定で Material Theme が開けなくなる問題を回避 (プルダウンの選択肢値に _ が含まれている)
+			else if ($1.endsWith(".icon"))
+				;
+			else
+				$_ = ?{translation.class}.translateUnderscoreMnemonic($_, null);
+		]]></advice>
+
+		<jointPoint className="java.util.ResourceBundle" methodName="getString">
+		-->
+
+			<!-- 呼び出し元による除外：AWT ショートカットキー名 (Shift、Home など) -->
+			<!-- <excludeWhere className="java.awt.Toolkit"/> -->
+
+			<!-- 呼び出し元による除外：Fabric for Android でツーバーアイコンが有効にならない問題に対応 (idea.log 参照) -->
+			<!--
+			<excludeWhere className="com.crashlytics"/>
+
+		</jointPoint>
+
+	</pointCut>
+	-->
+	<pointCut editPoint="execution" timing="before">
+		<!-- 限定 -->
+		<!-- プレースホルダがある場合 (XXXBundle では埋め込み済みのため) -->
+		<!-- git 操作時の Console ビュー (ここで訳さないとビューが増え続けるため) -->
+		<advice><![CDATA[
+			if ($1 != null && ($1.contains("{0}") || $1.equals("Console")))
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<!-- ResourceBundle#getString は下記で使用済みのため、この後に呼ばれるメソッドで対応 -->
+		<jointPoint className="com.intellij.BundleBase" methodName="replaceMnemonicAmpersand"/>
+
+	</pointCut>
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$_ = $proceed($$);
+			$_ = ?{translation.class}.translateUnderscoreMnemonic($_, null);
+		]]></advice>
+
+		<!-- Java 標準リソースバンドル (基本的に別途 XXXBundle などで処理し、ここでは特殊対応) -->
+		<jointPoint className="java.util.ResourceBundle" methodName="getString">
+
+			<!-- 呼び出し元による限定：設定 > 外観 & 振る舞い > マテリアル・カスタム・テーマ (.jfd ファイルから) -->
+			<includeWhere className="com.chrisrm.idea.config.ui.MTCustomThemeForm"/>
+
+			<!-- 呼び出し元による限定：Android 設定リポジトリー: Upstream URL (.form ファイルから) -->
+			<includeWhere className="org.jetbrains.settingsRepository.IcsSettingsPanel"/>
+
+		</jointPoint>
+
+		<!-- UI バンドル (限定しないと構造ビューが表示されなくなる) -->
+		<jointPoint className="com.intellij.ui.UIBundle" methodName="message">
+
+			<!-- 呼び出し元による限定：右下の小さなおじさん > ホバー (クリックしてこのファイルの強調表示～) -->
+			<includeWhere className="com.intellij.openapi.wm.impl.status.TogglePopupHintsPanel"/>
+
+			<!-- 呼び出し元による限定：メッセージビュー > タブ：右クリック > すべて閉じる -->
+			<includeWhere className="com.intellij.ui.content.tabs"/>
+
+		</jointPoint>
+
+	</pointCut>
+	<pointCut editPoint="execution" timing="after">
+		<!-- プロジェクトビュー > 外部ライブラリー -->
+		<!--
+		注意；ニーモニックを処理すると Java アプリ実行時の結果が下記となり値が表示されない
+		プロセスは終了コード $EXITCODE$ で完了しました
+		-->
+		<advice><![CDATA[
+			if ($_ != null && $_.contains("$EXIT"))
+				return ?{translation.class}.translateIgnoreMnemonic($_, null);
+			return ?{translation.class}.translateUnderscoreMnemonic($_, null);
+		]]></advice>
+
+		<jointPoint className="com.intellij.ide.IdeBundle" methodName="message"/>
+
+	</pointCut>
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			return ?{translation.class}.translateUnderscoreMnemonic($_, null);
+		]]></advice>
+
+		<!-- コミットダイアログのコミットボタン (Comm&it) と Commitの前・後 -->
+		<!-- → 汎用的に対応可能な AbstractAction と TitledSeparator の対応に変更
+		<jointPoint className="org.jetbrains.idea.svn.SvnBundle" methodName="message"/>
+		<jointPoint className="git4idea.i18n.GitBundle" methodName="message"/>
+		<jointPoint className="git4idea.i18n.GitBundle" methodName="getString"/>
+		-->
+
+		<!-- 設定 > エディター > カラー・スキームの切り替え > 言語デフォルト > セマンティック強調表示 -->
+		<jointPoint className="com.intellij.openapi.application.ApplicationBundle" methodName="message"/>
+
+		<!-- 設定 > パンくずリスト > 右クリックメニュー -->
+		<jointPoint className="com.intellij.idea.ActionsBundle" methodName="message"/>
+
+		<!-- 設定 > ツール > 開始タスク > ＋クリック -->
+		<jointPoint className="com.intellij.execution.ExecutionBundle" methodName="message"/>
+
+		<!-- メニュー > 編集 > 行の複製 -->
+		<jointPoint className="com.intellij.openapi.editor.EditorBundle" methodName="message"/>
+
+		<!-- メニュー > ヘルプ > 生産性ガイド > テーブル内項目 -->
+		<jointPoint className="com.intellij.featureStatistics.FeatureStatisticsBundle" methodName="message"/>
+		<jointPoint className="com.intellij.xml.XmlBundle" methodName="message"/>
+
+		<!-- 使用箇所の検索ダイアログ -->
+		<jointPoint className="com.intellij.find.FindBundle" methodName="message"/>
+
+		<!-- 使用箇所の検索 > 検索ビュー > Read value -->
+		<jointPoint className="com.intellij.usageView.UsageViewBundle" methodName="message"/>
+
+		<!-- 使用箇所の検索 > 検索ビュー > Method -->
+		<jointPoint className="com.intellij.lang.LangBundle" methodName="message"/>
+
+		<!-- デバッグビュー > タブ : Console -->
+		<jointPoint className="com.intellij.xdebugger.XDebuggerBundle" methodName="message"/>
+
+		<!-- Ant ビュー > Ant ファイル右クリ > Remove Build File -->
+		<jointPoint className="com.intellij.lang.ant.AntBundle" methodName="message"/>
+
+		<!-- 設定 > カラー・スキームの切り替え > 一般 ： ツリー > エディターおよび警告 > Unused entry -->
+		<jointPoint className="com.intellij.application.options.colors.ColorOptionsTree$MyTreeNode"
+			methodName="toString"/>
+
+		<!-- 実行選択ポップアップ (Shift+Alt+F9) > (対象項目) > Save configuration -->
+		<jointPoint className="com.intellij.execution.actions.ChooseRunConfigurationPopup$ActionWrapper"
+			methodName="getText"/>
+
+	</pointCut>
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			$_ = ?{translation.class}.translate($_, null);
+		]]></advice>
+
+		<!-- 設定 > パンくずリスト (2017 String[]) -->
+		<jointPoint className="com.intellij.openapi.options.newEditor.SettingsTreeView" methodName="getPathNames"
+				descriptor="(Lcom/intellij/openapi/options/newEditor/SettingsTreeView$MyNode;)[Ljava/lang/String;"/>
+
+		<!-- 設定 > パンくずリスト (2018 Collection<String>) -->
+		<jointPoint className="com.intellij.openapi.options.newEditor.SettingsTreeView" methodName="getPathNames"
+				descriptor="(Lcom/intellij/openapi/options/newEditor/SettingsTreeView$MyNode;)Ljava/util/Collection;"/>
+
+	</pointCut>
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<!-- コミットダイアログの Commitの前、後 (タイトルボーダー) -->
+		<jointPoint className="com.intellij.ui.TitledSeparator" methodName="setText"/>
+
+	</pointCut>
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if ("Name".equals($1))
+				$2 = ?{translation.class}.translateUnderscoreMnemonic((String) $2, null);
+		]]></advice>
+
+		<!-- Git のコミットやプッシュのダイアログボタン -->
+		<jointPoint className="javax.swing.AbstractAction" methodName="putValue"/>
+
+	</pointCut>
+	<!-- #################### END -->
+
+	<!-- 翻訳 (after) ニーモニックなし -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$_ = $proceed($$);
+			$_ = ?{translation.class}.translateIgnoreMnemonic($_, null);
+		]]></advice>
+
+		<!-- HTML ファイルのロード（用途によりサイズが大きいため限定しておく）-->
+		<jointPoint className="com.intellij.util.ResourceUtil" methodName="loadText">
+
+			<!-- 呼び出し元による限定：今日のヒント -->
+			<includeWhere className="com.intellij.ide.util.TipUIUtil"/>
+
+			<!-- 呼び出し元による限定：インスペクション -->
+			<includeWhere className="com.intellij.codeInspection"/>
+
+		</jointPoint>
+
+		<!-- UI 要素の表示用名称の翻訳 -->
+		<jointPoint className="com.intellij.psi.ElementDescriptionUtil" methodName="getElementDescription">
+
+			<!-- 呼び出し元による限定：削除ダイアログの "2 classes" など -->
+			<includeWhere className="com.intellij.ide.util.DeleteUtil"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!--
+	before 翻訳除外識別子を付加
+	excludeTrace はスタックトレースでコスト高のため、頻繁に利用されるラベルなどで使用 (安易に多用しないように注意)
+	-->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			if ($1 != null && !$1.isEmpty())
+				$1 = "%PLEIADES_EXCLUDE%" + $1;
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- Swing ラベル (execution before の setText で識別子削除) -->
+		<jointPoint className="javax.swing.JLabel" methodName="setText">
+
+			<!-- 呼び出し元による限定：起動時のプロジェクト選択画面 -->
+			<includeWhere className="com.intellij.openapi.wm.impl.welcomeScreen.NewRecentProjectPanel"/>
+
+		</jointPoint>
+
+		<!-- Swing ボタン (execution before の setText で識別子削除) -->
+		<jointPoint className="javax.swing.JCheckBox" methodName="setText">
+
+			<!-- 呼び出し元による限定：Android Studio デザイナーの属性選択ポップアップ -->
+			<includeWhere className="com.android.tools.idea.uibuilder.property.editors.NlFlagEditor"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 特定の訳: Gist の作成ダイアログ上のボタン -->
+	<!-- バージョン 2016 あたりで Private → Secret になり対応不要となった 2018.12.18
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			if ($1 != null && $1.equals("Private"))
+				$1 = "プライベート";
+			$_ = $proceed($$);
+		]]></advice>
+
+		<jointPoint className="javax.swing.AbstractButton" methodName="setText">
+
+			<includeWhere className="org.jetbrains.plugins.github.ui.GithubCreateGistPanel"/>
+
+		</jointPoint>
+
+	</pointCut>
+	-->
+
+	<!-- 翻訳 (before・第 1 引数) -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			final String PREFIX = "%PLEIADES_EXCLUDE%";
+			if ($1 == null)
+				;
+			// 翻訳除外: (廃止) ツール > Web サービス > Axis → translation-override-idea.properties に移動
+			//else if ($1.equals("_Axis"))
+			//	;
+			// 翻訳除外: プロジェクトビュー右クリック > ブラウザ > Edge
+			else if ($1.equals("Edge"))
+				;
+			// 翻訳除外: DataGrip の比較プルダウンで追加されたものを除去 (DumbAwareAction)
+			else if ($1.startsWith(PREFIX))
+				$1 = $1.substring(PREFIX.length());
+			else
+				$1 = ?{translation.class}.translateUnderscoreMnemonic($1, null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- ツール > デプロイ などのアクション・ラベル、引数 1 個 (注意：頻繁に呼び出されるためトレースは使用しない) -->
+		<jointPoint className="com.intellij.openapi.actionSystem.Presentation" methodName="setText"
+				descriptor="(Ljava/lang/String;)V">
+
+			<!-- 呼び出し元による除外：プロジェクトビュー > モジュールの移動 > モジュール名 (別箇所でも除外あり) -->
+			<excludeWhere className="com.intellij.ide.projectView.impl.MoveModuleToGroup"/>
+
+			<!-- 呼び出し元による除外：ようこそ画面のプロジェクトのグループ移動 (別箇所でも除外あり) -->
+			<excludeWhere className="com.intellij.openapi.wm.impl.welcomeScreen.MoveProjectToGroupAction"
+				methodName="MoveProjectToGroupAction"/>
+
+			<!-- 呼び出し元による除外：上部の Gradle モジュール選択コンボ > 保管 -->
+			<excludeWhere className="com.intellij.execution.actions.RunConfigurationsComboBoxAction"/>
+
+			<!-- 呼び出し元による除外：ファイル > 最近使ったファイルを開く > (プロジェクト名) -->
+			<!-- Pleiades 未使用状態でもアンダーバーがニーモニックとして処理される不具合あり -->
+			<excludeWhere className="com.intellij.ide.ReopenProjectAction"/>
+
+			<!-- 呼び出し元による除外：フォルダ右クリック > Subversion > 無視リストから除外 > フォルダ名 -->
+			<excludeWhere className="org.jetbrains.idea.svn.actions.RemoveFromIgnoreListAction"/>
+
+			<!-- 呼び出し元による除外：[自身] 右上の実行構成プルダウン（All Tests など） -->
+			<excludeWhere className="com.intellij.openapi.actionSystem.Presentation"/>
+
+		</jointPoint>
+
+		<!-- メニューなどのアクション・ラベル、引数 2 個 (注意：頻繁に呼び出されるためトレースは使用しない) -->
+		<jointPoint className="com.intellij.openapi.actionSystem.Presentation" methodName="setText"
+				descriptor="(Ljava/lang/String;Z)V">
+
+			<!-- 呼び出し元による限定：モジュール右クリック > 再ビルド モジュール '(モジュール名)' -->
+			<includeWhere className="com.intellij.compiler.actions.CompileAction"/>
+
+			<!-- 呼び出し元による限定：データベース右クリック > Dump Data to File -->
+			<includeWhere className="com.intellij.database.run.actions.DumpAction"/>
+
+			<!-- 呼び出し元による限定：Branch 'ブランチ名' -->
+			<includeWhere className="git4idea.ui.branch.GitLogBranchOperationsActionGroup"/>
+
+			<!-- 呼び出し元による限定：編集 > Emoji & Symbols -->
+			<includeWhere className="com.intellij.ide.actions.MacEmojiAndSymbolsInputAction"/>
+
+			<!-- 呼び出し元による限定：メニュー > ウィンドウ > アクティブ・ウィンドウ > Hide All Windows -->
+			<includeWhere className="com.intellij.ide.actions.HideAllToolWindowsAction"/>
+
+			<!-- 呼び出し元による限定：PyCharm エディター上で右クリック > &Concurrency Diagram for 'a' -->
+			<includeWhere className="com.intellij.execution.actions.RunContextAction"/>
+
+			<!-- 呼び出し元による限定：Android ファイル > Sync with File System -->
+			<includeWhere className="com.android.tools.idea.startup.AndroidStudioInitializer"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数・Supplier - 上の String と同じ定義) -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateUnderscoreMnemonic($1, null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- ツール > デプロイ などのアクション・ラベル、引数 1 個 (注意：頻繁に呼び出されるためトレースは使用しない) -->
+		<jointPoint className="com.intellij.openapi.actionSystem.Presentation" methodName="setText"
+				descriptor="(Ljava/util/function/Supplier;)V">
+
+			<!-- 呼び出し元による除外：プロジェクトビュー > モジュールの移動 > モジュール名 (別箇所でも除外あり) -->
+			<excludeWhere className="com.intellij.ide.projectView.impl.MoveModuleToGroup"/>
+
+			<!-- 呼び出し元による除外：ようこそ画面のプロジェクトのグループ移動 (別箇所でも除外あり) -->
+			<excludeWhere className="com.intellij.openapi.wm.impl.welcomeScreen.MoveProjectToGroupAction"
+				methodName="MoveProjectToGroupAction"/>
+
+			<!-- 呼び出し元による除外：上部の Gradle モジュール選択コンボ > 保管 -->
+			<excludeWhere className="com.intellij.execution.actions.RunConfigurationsComboBoxAction"/>
+
+			<!-- 呼び出し元による除外：ファイル > 最近使ったファイルを開く > (プロジェクト名) -->
+			<!-- Pleiades 未使用状態でもアンダーバーがニーモニックとして処理される不具合あり -->
+			<excludeWhere className="com.intellij.ide.ReopenProjectAction"/>
+
+			<!-- 呼び出し元による除外：フォルダ右クリック > Subversion > 無視リストから除外 > フォルダ名 -->
+			<excludeWhere className="org.jetbrains.idea.svn.actions.RemoveFromIgnoreListAction"/>
+
+			<!-- 呼び出し元による除外：[自身] 右上の実行構成プルダウン（All Tests など） -->
+			<excludeWhere className="com.intellij.openapi.actionSystem.Presentation"/>
+
+		</jointPoint>
+
+		<!-- メニューなどのアクション・ラベル、引数 2 個 (注意：頻繁に呼び出されるためトレースは使用しない) -->
+		<jointPoint className="com.intellij.openapi.actionSystem.Presentation" methodName="setText"
+				descriptor="(Ljava/util/function/Supplier;Z)V">
+
+			<!-- 呼び出し元による限定：モジュール右クリック > 再ビルド モジュール '(モジュール名)' -->
+			<includeWhere className="com.intellij.compiler.actions.CompileAction"/>
+
+			<!-- 呼び出し元による限定：データベース右クリック > Dump Data to File -->
+			<includeWhere className="com.intellij.database.run.actions.DumpAction"/>
+
+			<!-- 呼び出し元による限定：Branch 'ブランチ名' -->
+			<includeWhere className="git4idea.ui.branch.GitLogBranchOperationsActionGroup"/>
+
+			<!-- 呼び出し元による限定：編集 > Emoji & Symbols -->
+			<includeWhere className="com.intellij.ide.actions.MacEmojiAndSymbolsInputAction"/>
+
+			<!-- 呼び出し元による限定：メニュー > ウィンドウ > アクティブ・ウィンドウ > Hide All Windows -->
+			<includeWhere className="com.intellij.ide.actions.HideAllToolWindowsAction"/>
+
+			<!-- 呼び出し元による限定：PyCharm エディター上で右クリック > &Concurrency Diagram for 'a' -->
+			<includeWhere className="com.intellij.execution.actions.RunContextAction"/>
+
+			<!-- 呼び出し元による限定：Android ファイル > Sync with File System -->
+			<includeWhere className="com.android.tools.idea.startup.AndroidStudioInitializer"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) ニーモニックなし -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- JDK メッセージ・フォーマット翻訳 (2019.01.01 ニーモニックなし から あり に移動: インポートウィザード) -->
+		<jointPoint className="java.text.MessageFormat" methodName="format"
+					descriptor="(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;"/>
+
+		<!-- JDK 文字列フォーマット翻訳 (プラグイン lib の jar に対する NotFoundException 回避のため限定が必要) -->
+		<jointPoint className="java.lang.String" methodName="format"
+					descriptor="(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;">
+
+			<!-- 呼び出し元による限定：コミットパネル > %s %d of %d -->
+			<includeWhere className="com.intellij.openapi.vcs.changes.ui.CommitLegendPanel"/>
+
+			<!-- 呼び出し元による限定：下部エンコーディングのツールチップ -->
+			<includeWhere className="com.intellij.openapi.wm.impl.status.EncodingPanel"/>
+
+			<!-- 呼び出し元による限定：ブランチとの比較ダイアログ・タイトルなど -->
+			<includeWhere className="com.intellij.openapi.vcs.history"/>
+
+			<!-- 呼び出し元による限定：Android ビルド・バリアントのダイアログ・タイトルなど -->
+			<includeWhere className="com.android.tools.idea.gradle.variant.view"/>
+
+		</jointPoint>
+
+		<!-- Swing エディター・ペイン (setEditable に false があとで設定されている場合に対応) -->
+		<jointPoint className="javax.swing.JEditorPane" methodName="setText">
+
+			<!-- 呼び出し元による限定：更新ダイアログのバージョンアップ内容 -->
+			<includeWhere className="com.intellij.openapi.updateSettings.impl.AbstractUpdateDialog"/>
+
+			<!-- 呼び出し元による限定：Gist ダイアログ内の説明 -->
+			<includeWhere className="org.jetbrains.plugins.github.authentication.ui.GithubLoginDialog"/>
+
+			<!-- 呼び出し元による限定：Android Studio > リソース・エクスプローラー -->
+			<includeWhere className="com.android.tools.idea.resourceExplorer.view.NoFacetView"/>
+
+		</jointPoint>
+
+		<!-- Swing テキスト・ペイン -->
+		<jointPoint className="javax.swing.JTextPane" methodName="setText">
+
+			<!-- 呼び出し元による限定：ダイアログのメッセージ -->
+			<includeWhere className="com.intellij.openapi.ui.Messages"/>
+
+		</jointPoint>
+
+		<!-- プロジェクト・ビューのノード名 -->
+		<jointPoint className="com.intellij.ide.projectView.PresentationData" methodName="setPresentableText">
+
+			<!-- 呼び出し元による限定：Module Dependencies -->
+			<includeWhere className="com.intellij.ide.projectView.impl.nodes.ModuleListNode"/>
+
+			<!-- 呼び出し元による限定：Scratches and Consoles -->
+			<includeWhere className="com.intellij.ide.scratch.ScratchProjectViewPane$MyProjectNode"/>
+
+			<!-- 呼び出し元による限定：Android > Gradle Scripts -->
+			<includeWhere className="com.android.tools.idea.navigator.nodes.AndroidBuildScriptsGroupNode"/>
+			<!-- 呼び出し元による限定：Android > Gradle Scripts (3.2) -->
+			<includeWhere className="com.android.tools.idea.navigator.nodes.android.AndroidBuildScriptsGroupNode"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) ニーモニックなし、String 判定 -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			if ($1 instanceof String)
+				$1 = ?{translation.class}.translateIgnoreMnemonic((String) $1, null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- Swing ツリーノード -->
+		<jointPoint className="javax.swing.tree.DefaultMutableTreeNode" methodName="DefaultMutableTreeNode"
+				descriptor="(Ljava/lang/Object;)V">
+
+			<!-- 呼び出し元による限定：分析 > コードのインスペクション > 結果ツリーのグループ名 -->
+			<includeWhere className="com.intellij.codeInspection.ui.InspectionTreeNode"/>
+
+			<!-- 呼び出し元による限定：Android モデルビュー > 進捗メッセージ -->
+			<includeWhere className="com.android.tools.idea.gradle.AndroidModelView" methodName="updateContents"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) ニーモニックなし、br タグ分割 -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateIgnoreMnemonic($1, ?{JOINT_POINT}, "<br>");
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- JetBrain ラベル -->
+		<jointPoint className="com.intellij.ui.components.JBLabel" methodName="setText">
+
+			<!-- 呼び出し元による限定：Android AVD の API レベル選択のバージョン別機能表示ダイアログ -->
+			<includeWhere className="com.android.tools.idea.npw.ChooseApiLevelDialog"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 複数形変換を無効にして翻訳 -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$_ = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<!-- 文章中の files や directories などが先に翻訳されないように限定する (before で無効化) -->
+		<jointPoint className="com.intellij.openapi.util.text.StringUtil" methodName="pluralize">
+
+			<!-- 呼び出し元による限定：インスペクション結果 (右ペイン) > n problems -->
+			<includeWhere className="com.intellij.codeInspection.ui.QuickFixPreviewPanelFactory"/>
+
+			<!-- 呼び出し元による限定：検索結果ビューで 出現箇所s になるのを抑止するために先に翻訳 -->
+			<includeWhere className="com.intellij.usages.impl.UsageViewTreeCellRenderer"/>
+			<includeWhere className="com.intellij.usages.impl.PreviewUsageAction"/>
+
+		</jointPoint>
+
+	</pointCut>
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			return $1;
+		]]></advice>
+
+		<!-- 複数形変換を無効化 (限定翻訳は around で処理) -->
+		<jointPoint className="com.intellij.openapi.util.text.StringUtil" methodName="pluralize"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 特殊対応 -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			if ($1 == null || $1.isEmpty())
+				;
+			else if ($1.startsWith("Remove ") && !$1.contains("Abbreviation"))
+				$1 = $1.replaceFirst("Remove (.+)", "$1 の除去");
+			else if ($0.getClass().getName().contains(".CompareWithGroup"))
+				$1 = "%PLEIADES_EXCLUDE%" + $1;
+			$_ = $proceed($$);
+		]]></advice>
+
+		<jointPoint className="com.intellij.openapi.project.DumbAwareAction" methodName="DumbAwareAction"
+					descriptor="(Ljava/lang/String;)V">
+
+			<!-- 呼び出し元による限定：キーマップ右クリック -->
+			<includeWhere className="com.intellij.openapi.keymap.impl.ui.KeymapPanel"/>
+
+			<!-- 呼び出し元による限定：DataGrip 比較プルダウン (Presentation#setText で翻訳除外識別子削除) -->
+			<includeWhere className="com.intellij.database.run.actions.CompareWithGroup"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 2 引数) ニーモニックなし -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$2 = ?{translation.class}.translateIgnoreMnemonic($2, null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- 検索ユーティリティー -->
+		<jointPoint className="com.intellij.ide.ui.search.SearchUtil" methodName="appendFragments">
+
+			<!-- 呼び出し元による限定：インテンションダイアログ > ツリーのインテンショングループ名 -->
+			<includeWhere className="com.intellij.codeInsight.intention.impl.config.IntentionSettingsTree"/>
+
+			<!-- 呼び出し元による限定：設定 > キーマップ > ツリーのアクション名 -->
+			<includeWhere className="com.intellij.openapi.keymap.impl.ui.ActionsTree"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 2 引数) ニーモニックなし、アクション検索の StringIndexOutOfBoundsException 対策で空白追加 -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$2 = ?{translation.class}.translateIgnoreMnemonic($2, null);
+			$2 += "                                                                                           ";
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- ショートカット検索 -->
+		<jointPoint className="com.intellij.ui.speedSearch.SpeedSearchUtil" methodName="appendColoredFragments">
+
+			<!-- 呼び出し元による限定：アクション検索 -->
+			<includeWhere className="com.intellij.ide.util.gotoByName.GotoActionModel"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 2 引数の可変長引数) -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			if ($2 != null && $2.length > 0)
+				$2 = ?{translation.class}.translate($2, null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- リソースバンドルの埋め込み引数フォーマット (インテンションの使用可不可切り替えメッセージ) -->
+		<!-- モジュール名除外が多すぎるため、除外できるように使用箇所に近い部分に限定
+		<jointPoint className="com.intellij.BundleBase" methodName="format"/>
+		-->
+		<jointPoint className="com.intellij.codeInsight.CodeInsightBundle" methodName="message">
+
+			<!-- 呼び出し元による除外：クイックドキュメントのタイトル埋め込みクラス名 -->
+			<excludeWhere className="com.intellij.codeInsight.documentation.DocumentationManager"/>
+
+			<!-- 呼び出し元による除外：クイックドキュメント Javadoc 内のクラス名 (Android Studio) -->
+			<excludeWhere className="com.intellij.codeInsight.javadoc.JavaDocInfoGenerator"/>
+
+			<!-- 呼び出し元による除外：クイック定義のタイトル埋め込みクラス名 -->
+			<excludeWhere className="com.intellij.codeInsight.hint.actions.ShowImplementationsAction"/>
+
+			<!-- 呼び出し元による除外：モジュール右クリック > インポートの再編成のモジュール名 -->
+			<excludeWhere className="com.intellij.codeInsight.actions.OptimizeImportsAction"/>
+
+		</jointPoint>
+
+		<!-- ようこそ > インポート > ダイアログ -->
+		<jointPoint className="com.intellij.openapi.project.ProjectBundle" methodName="message">
+
+			<!-- 呼び出し元による除外：ようこそ画面 > プロジェクト選択 > 起動ダイアログ内のプロジェクト名 -->
+			<excludeWhere className="com.intellij.openapi.project.impl.ProjectManagerImpl"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 2 引数の可変長引数の 1 つ目) ニーモニックなし -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			if ($2 != null && $2.length > 0)
+				$2[0] = ?{translation.class}.translateIgnoreMnemonic($2[0], null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<jointPoint className="com.intellij.openapi.vcs.VcsBundle" methodName="message">
+
+			<!-- 呼び出し元による限定：VCS > Projectの更新 -->
+			<includeWhere className="com.intellij.openapi.vcs.update.ActionInfo"/>
+
+			<!-- 呼び出し元による限定：エディター右クリ > ローカル・ヒストリー > Selection -->
+			<includeWhere className="com.intellij.vcsUtil.VcsSelection"/>
+
+		</jointPoint>
+
+		<jointPoint className="com.intellij.execution.ExecutionBundle" methodName="message">
+
+			<!-- 呼び出し元による限定：設定 > キーマップ > {0} context configuration -->
+			<includeWhere className="com.intellij.execution.actions.RunContextAction"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 2 引数の可変長引数の 2 つ目) -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			if ($2 != null && $2.length == 2)
+				$2[1] = ?{translation.class}.translate($2[1], null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- コードインサイト・メッセージ・バンドル -->
+		<jointPoint className="com.intellij.codeInsight.daemon.DaemonBundle" methodName="message">
+
+			<!-- 呼び出し元による限定：エディター右上 > エラー、警告数ポップアップ -->
+			<includeWhere className="com.intellij.codeInsight.daemon.impl.TrafficLightRenderer"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 3 引数) -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$3 = ?{translation.class}.translateIgnoreMnemonic($3, null);
+			$_ = $proceed($$);
+		]]></advice>
+
+		<!-- 文字列のセンタリング描画 -->
+		<jointPoint className="com.intellij.util.ui.UIUtil"
+					methodName="drawCenteredString"
+					descriptor="(Ljava/awt/Graphics2D;Ljava/awt/Rectangle;Ljava/lang/String;ZZ)V">
+
+			<!-- 呼び出し元による除外：右上ビルドプルダウンの選択済みラベル (build など) -->
+			<excludeWhere className="com.intellij.openapi.actionSystem.ex.ComboBoxAction"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!--
+	###########################################################################
+	  翻訳：メソッド実行 (editPoint="execution")
+	###########################################################################
+	-->
+	<!--
+	===========================================================================
+	  before
+	===========================================================================
+	-->
+
+	<!-- Swing ニーモニック特定文字の存在しない n 番目指定で例外が発生するため無効化 -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$1 = -1;
+		]]></advice>
+
+		<jointPoint className="javax.swing.AbstractButton" methodName="setDisplayedMnemonicIndex"/>
+		<jointPoint className="javax.swing.JLabel" methodName="setDisplayedMnemonicIndex"/>
+
+	</pointCut>
+
+	<!-- プロジェクトのウィンドウ id の NPE 抑止 (before) 呼び出しトレースによる除外なし -->
+	<!-- ResourceBundle でウィンドウ ID を除外したことにより不要 2017.02.01
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if ($1 == null) $1 = "ProjectPane";
+		]]></advice>
+
+		<jointPoint className="com.intellij.ide.projectView.impl.ProjectViewImpl" methodName="getProjectViewPaneById"/>
+
+	</pointCut>
+	-->
+
+	<!-- 翻訳 (before・第 1 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translate($1, null);
+		]]></advice>
+
+		<!-- JetBrain メニュー (Android モニター右クリック > 最近の検索なし) - 除外が必要な可能性あり -->
+		<jointPoint className="com.intellij.openapi.ui.JBMenuItem" methodName="JBMenuItem"/>
+
+		<!-- Swing タブパネル -->
+		<jointPoint className="javax.swing.JTabbedPane" methodName="insertTab"/>
+
+		<!-- タブパネル (上記以外 Other、Options など) -->
+		<jointPoint className="com.intellij.ui.JBTabsPaneImpl" methodName="insertTab"/>
+
+		<!-- Mac 固有メニュー (合わせて info.plist の English を Japanese にする) -->
+		<jointPoint className="com.intellij.ui.mac.foundation.Foundation" methodName="nsString"/>
+
+		<!-- リンク・ラベル -->
+		<jointPoint className="com.intellij.ui.components.labels.LinkLabel" methodName="LinkLabel"
+					descriptor="(Ljava/lang/String;Ljavax/swing/Icon;)V"/>
+
+		<!-- HTML リンク・ラベル -->
+		<jointPoint className="com.intellij.ui.HyperlinkLabel" methodName="setHtmlText"/>
+
+		<!-- 選択肢全般 -->
+		<jointPoint className="com.intellij.ide.ui.search.OptionDescription" methodName="OptionDescription"
+			descriptor="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"/>
+
+		<!-- ターミナル右クリック -->
+		<jointPoint className="com.jediterm.terminal.ui.TerminalAction" methodName="TerminalAction"/>
+
+		<!-- 設定 > プラグイン > ヘッダ  (第 2 引数対応もあり) -->
+		<jointPoint className="com.intellij.ide.plugins.newui.TabHeaderComponent" methodName="addTab"
+				descriptor="(Ljava/lang/String;)V"/>
+
+		<!-- アクション検索ポップアップの右側説明 -->
+		<jointPoint className="com.intellij.ui.TextIcon" methodName="setText"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 呼び出しトレースによる除外なし、ニーモニックなし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<!-- アクションホバー時の左下メッセージ -->
+		<jointPoint className="com.intellij.openapi.actionSystem.Presentation" methodName="setDescription"
+		 			descriptor="(Ljava/lang/String;)V"/>
+
+		<!-- ヒント・テキスト (ホバー) -->
+		<jointPoint className="com.intellij.codeInsight.hint.HintUtil" methodName="prepareHintText"
+					descriptor="(Ljava/lang/String;Lcom/intellij/ui/HintHint;)Ljava/lang/String;"/>
+
+		<!-- フレームのタイトル (Android AVD マネージャーなど) -->
+		<jointPoint className="com.intellij.openapi.ui.FrameWrapper" methodName="setTitle"/>
+
+		<!-- ステータスバーのテキストパネル (Android ステータスバー > コンテキスト など) -->
+		<jointPoint className="com.intellij.openapi.wm.impl.status.TextPanel" methodName="setText"/>
+
+		<!-- モジュール設定のツリー -->
+		<jointPoint className="com.intellij.ui.SeparatorWithText" methodName="setCaption"/>
+
+		<!-- クラス、シンボルの検索結果タイトル -->
+		<jointPoint className="com.intellij.ide.util.gotoByName.ChooseByNameBase" methodName="setFindUsagesTitle"/>
+
+		<!-- リファクタリングができない場合のエラーツールチップ -->
+		<jointPoint className="com.intellij.refactoring.RefactoringBundle" methodName="getCannotRefactorMessage"/>
+
+		<!-- 分析 > データフロー分析ダイアログのタイトル -->
+		<jointPoint className="com.intellij.slicer.SliceManager" methodName="getElementDescription"/>
+
+		<!-- プロジェクト・ビューのノード名の右グレー文字 -->
+		<jointPoint className="com.intellij.ide.projectView.PresentationData" methodName="setLocationString"/>
+
+		<!-- パス内検索ポップアップ > String to find is empty -->
+		<jointPoint className="com.intellij.openapi.ui.ValidationInfo" methodName="ValidationInfo"/>
+
+		<!-- データベースコンソール > 抽出プルダウン (省略される前に翻訳) -->
+		<jointPoint className="com.intellij.database.run.actions.ChooseExtractorAction" methodName="updateText"/>
+
+		<!-- Android エディター上の警告ホバー (Annotation では HTML 化されているため前処理) -->
+		<jointPoint className="com.android.tools.lint.detector.api.TextFormat" methodName="convertTo"/>
+
+		<!-- IDE Features Trainer: レッスン説明 -->
+		<jointPoint className="training.commands.kotlin.TaskContext" methodName="text"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 呼び出しトレースによる除外なし、ニーモニックなし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			// [github#56] SSHトンネルを使用したデータベース接続がエラー対応
+			if ($1 != null && !$1.startsWith("<"))
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+        <!-- パネルが空のときのメッセージ -->
+		<jointPoint className="com.intellij.util.ui.StatusText" methodName="setText"
+					descriptor="(Ljava/lang/String;Lcom/intellij/ui/SimpleTextAttributes;)Lcom/intellij/util/ui/StatusText;"/>
+		<jointPoint className="com.intellij.util.ui.StatusText" methodName="appendText"
+					descriptor="(Ljava/lang/String;Lcom/intellij/ui/SimpleTextAttributes;Ljava/awt/event/ActionListener;)Lcom/intellij/util/ui/StatusText;"/>
+		<jointPoint className="com.intellij.util.ui.StatusText" methodName="appendSecondaryText"
+					descriptor="(Ljava/lang/String;Lcom/intellij/ui/SimpleTextAttributes;Ljava/awt/event/ActionListener;)Lcom/intellij/util/ui/StatusText;"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 呼び出しトレースによる除外なし、ニーモニックなし、グレー文字、: より前部分-->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if ($2 == com.intellij.ui.SimpleTextAttributes.GRAY_ATTRIBUTES)
+				$1 = ?{translation.class}.translateBefore($1, null, ":");
+		]]></advice>
+
+		<!-- Android プロジェクト・ビュー > Gradle スクリプト > ノード名の右グレー文字 -->
+		<jointPoint className="com.intellij.ide.projectView.PresentationData" methodName="addText"
+					descriptor="(Ljava/lang/String;Lcom/intellij/ui/SimpleTextAttributes;)V"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 呼び出しトレースによる除外なし、ニーモニックなし、グレー文字 -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if ($3 == com.intellij.ui.SimpleTextAttributes.GRAY_ATTRIBUTES)
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<!-- データベース・ビュー > その他のスキーマ -->
+		<jointPoint className="com.intellij.ide.util.treeView.PresentableNodeDescriptor$ColoredFragment"
+					methodName="ColoredFragment"
+					descriptor="(Ljava/lang/String;Ljava/lang/String;Lcom/intellij/ui/SimpleTextAttributes;)V"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 呼び出しトレースによる除外あり -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			final String PREFIX = "%PLEIADES_EXCLUDE%";
+			if ($1 == null)
+				;
+			else if ($1.startsWith(PREFIX))
+				$1 = $1.substring(PREFIX.length());
+			else if ($1.endsWith("..."))
+				$1 = ?{translation.class}.translate($1, null); // 末尾 ... はトレースさせない
+			else
+				$1 = ?{translation.class}.translate($1, ?{JOINT_POINT});
+		]]></advice>
+
+		<!-- Swing ラベル -->
+		<jointPoint className="javax.swing.JLabel" methodName="setText">
+
+			<!-- 呼び出しトレースによる除外：Swing テーブル (モジュールのインポート一覧) -->
+			<excludeTrace className="javax.swing.JTable"/>
+
+			<!-- 呼び出しトレースによる除外：設定 > エディター > コードスタイル > プロパティ > カスタムスキーム選択コンボ -->
+			<excludeTrace className="javax.swing.plaf.basic.BasicComboBoxRenderer"/>
+
+			<!-- 呼び出しトレースによる除外：設定 > ビルド〜 > デバッガー > データビュー > JavaScript > 除外プロパティーリスト -->
+			<excludeTrace className="javax.swing.DefaultListCellRenderer"/>
+
+			<!-- 呼び出しトレースによる除外：起動時のプロジェクト選択画面 => 翻訳除外識別子付与に変更 -->
+			<!--<excludeTrace className="com.intellij.openapi.wm.impl.welcomeScreen.NewRecentProjectPanel"/>-->
+
+			<!-- 呼び出しトレースによる除外：データベース > 結果 > テーブルヘッダ -->
+			<excludeTrace className="com.intellij.database.run.ui.TableResultView"/><!-- 2018 以前 -->
+			<excludeTrace className="com.intellij.database.run.ui.table.TableResultView"/><!-- 2019 以降 -->
+
+			<!-- 呼び出しトレースによる除外：Gradle タスク作成時のモジュール選択コンボ -->
+			<excludeTrace className="com.intellij.openapi.ui.ComboBoxWithWidePopup"/>
+
+			<!-- 呼び出しトレースによる除外：Gradle タスク実行時のタイトル 2017.11.06 -->
+			<excludeTrace className="com.intellij.openapi.wm.impl.content.BaseLabel"/>
+
+			<!-- 呼び出しトレースによる除外：Gradle 実行ツールウィンドウのタイトル -->
+			<excludeTrace className="com.intellij.execution.ui.RunContentManagerImpl"/>
+
+			<!-- 呼び出しトレースによる除外：右上の Gradle モジュール選択コンボの中身 -->
+			<excludeTrace className="com.intellij.ui.GroupedElementsRenderer"/>
+
+			<!-- 呼び出しトレースによる除外：Javadoc ドキュメント : クイック・ビューのタイトル -->
+			<excludeTrace className="com.intellij.codeInsight.hint.ElementLocationUtil"/>
+
+			<!-- 呼び出しトレースによる除外：プロジェクト構造 > モジュール > 除外ディレクトリ > "build" -->
+			<excludeTrace className="com.intellij.openapi.roots.ui.configuration.ContentRootPanel" methodName="a"/>
+			<excludeTrace className="com.intellij.openapi.roots.ui.configuration.ContentRootPanel" methodName="createFolderComponent"/>
+			<excludeTrace className="com.intellij.ui.roots.FilePathClipper"/>
+
+			<!-- 呼び出しトレースによる除外：モジュール設定 > ソース > コンテンツルートリンクのホバー時 -->
+			<excludeTrace className="com.intellij.ui.HoverHyperlinkLabel$1" methodName="mouseEntered"/>
+
+			<!-- 呼び出しトレースによる除外：設定 > 言語 & フレームワーク > スタイルシート > Compass -->
+			<excludeTrace className="com.intellij.ui.ListCellRendererWrapper"/>
+
+			<!-- 呼び出しトレースによる除外：バージョン管理ビュー > ログタブ > ブランチ名ポップアップ -->
+			<excludeTrace className="com.intellij.vcs.log.ui.frame.ReferencesPanel"/>
+
+			<!-- 呼び出しトレースによる除外：ドキュメント -->
+			<excludeTrace className="com.intellij.ui.DocumentAdapter"/>
+
+			<!-- 呼び出しトレースによる除外：タイトルバーのプロジェクト名 -->
+			<excludeTrace className="com.intellij.openapi.wm.impl.customFrameDecorations.header.titleLabel.ProjectTitle"/>
+
+			<!-- 呼び出しトレースによる除外：Git マージ、タグダイアログ > 現在のブランチ名 -->
+			<excludeTrace className="git4idea.util.GitUIUtil" methodName="setupRootChooser"/>
+
+			<!-- 呼び出しトレースによる除外：リファクタリング > 移動 > パッケージ選択ダイアログのフォルダツリー -->
+			<excludeTrace className="com.intellij.ide.util.PackageChooserDialog"/>
+
+			<!-- 呼び出しトレースによる除外：プラグイン > プラグイン名 -->
+			<excludeTrace className="com.intellij.ide.plugins.newui.CellPluginComponent"/>
+
+			<!-- 呼び出しトレースによる除外：PhpStorm 設定 > 言語フレームワーク > PHP > サーバー > パスマッピングツリーの要素 -->
+			<excludeTrace className="com.jetbrains.php.ui.PhpAbstractFileTreeTable"/>
+
+			<!-- 呼び出しトレースによる除外：Android ようこそ画面の Version (バージョンという日本語が消える) -->
+			<excludeTrace className="com.intellij.openapi.wm.impl.welcomeScreen.FlatWelcomeFrame$FlatWelcomeScreen"/>
+
+			<!-- 呼び出しトレースによる除外：Android デザイナーの UI プロパティー -->
+			<excludeTrace className="com.android.tools.idea.uibuilder.property.inspector.InspectorPanel"
+						  methodName="createLabel"/>
+			<!-- 3.1 -->
+			<excludeTrace className="com.android.tools.idea.common.property.inspector.InspectorPanel"
+						  methodName="createLabel"/>
+			<!-- 3.4 (include は exclude より優先) -->
+			<excludeTrace className="com.android.tools.idea.common.property2.impl.ui.CollapsibleLabel"/>
+			<includeTrace className="com.android.tools.idea.common.property2.impl.ui.CollapsibleLabel"
+							methodName="valueChanged"/>
+			<includeTrace className="com.android.tools.idea.common.property2.impl.ui.PropertiesPage"
+							methodName="addTitle"/>
+
+			<!-- 呼び出しトレースによる除外：Android デザイナーのコンポーネント・ツリー -->
+			<excludeTrace className="com.android.tools.idea.uibuilder.structure.NlTreeCellRenderer"/>
+
+			<!-- 呼び出しトレースによる除外：Android モデル・ツールウィンドウ > プロジェクト名 -->
+			<excludeTrace className="com.android.tools.idea.gradle.util.ui.Header"/>
+
+			<!-- *************** includeTrace 優先 **************** -->
+
+			<!-- 呼び出しトレースによる限定：新規プロジェクト or モジュール作成ダイアログの左ツリー -->
+			<includeTrace className="com.intellij.ide.projectWizard.ProjectTypeStep" limit="0"/>
+
+			<!-- 呼び出しトレースによる限定：設定 > エディター > コード・スタイル > 折り返しおよび括弧 -->
+			<includeTrace className="com.intellij.application.options.codeStyle.OptionTableWithPreviewPanel"/>
+
+			<!-- 呼び出しトレースによる限定：設定 > 外観 & 振る舞い > ファイルの色 > スコープ名 -->
+			<includeTrace className="com.intellij.ui.tabs.FileColorSettingsTable" limit="0"/>
+
+			<!-- 呼び出しトレースによる限定：設定 > 外観 & 振る舞い > 通知 > グループ (プルダウンは after 定義) -->
+			<includeTrace className="com.intellij.notification.impl.ui.NotificationsConfigurablePanel"/>
+
+			<!-- 呼び出しトレースによる限定：設定 > エディター > ファイル・エンコーディング > 一覧のエンコード -->
+			<includeTrace className="com.intellij.openapi.vfs.encoding.EncodingFileTreeTable"/>
+
+			<!-- 呼び出しトレースによる限定：構成 > ライセンスの管理 > Fotgot? -->
+			<includeTrace className="com.intellij.ide.actions.RegisterAction"/>
+
+			<!-- 呼び出しトレースによる限定：モジュール設定 > 左ツリー -->
+			<includeTrace className="com.intellij.openapi.roots.ui.configuration.SidePanel"/>
+
+			<!-- 呼び出しトレースによる限定：Android プロジェクト構造 > 左ツリー -->
+			<includeTrace className="com.android.tools.idea.structure.dialog.SidePanel"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 呼び出しトレースによる除外あり、ニーモニックなし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateIgnoreMnemonic($1, ?{JOINT_POINT});
+		]]></advice>
+
+		<!-- AWT フレームのタイトル (ようこそ画面) - around だと動作しない -->
+		<jointPoint className="java.awt.Frame" methodName="setTitle">
+
+			<!-- 呼び出しトレースによる除外：メイン画面のタイトル - プロジェクト名 -->
+			<excludeTrace className="com.intellij.openapi.wm.impl.IdeFrameImpl"/>
+
+		</jointPoint>
+
+		<!-- シンプルカラードコンポーネント (呼び出し箇所が多いため限定) -->
+		<jointPoint className="com.intellij.ui.SimpleColoredComponent" methodName="append"
+					descriptor="(Ljava/lang/String;Lcom/intellij/ui/SimpleTextAttributes;)V">
+
+			<!-- 呼び出しトレースによる限定：アクション検索のアクション一覧 (クラス一覧なども対象になっていないか注意) -->
+			<includeTrace className="com.intellij.ide.actions.SearchEverywhereAction$MyListRenderer"
+				methodName="customizeCellRenderer"/>
+			<includeTrace className="com.intellij.ide.actions.searcheverywhere.SearchEverywhereUI$GroupTitleRenderer"/>
+
+			<!-- 呼び出しトレースによる限定：設定の左ツリー -->
+			<includeTrace className="com.intellij.openapi.options.newEditor.SettingsTreeView"/>
+
+			<!-- 呼び出しトレースによる限定：設定 > エディター > インスペクション > ツリー -->
+			<includeTrace className="com.intellij.profile.codeInspection"/>
+			<includeTrace className="com.intellij.codeInspection.ui"/>
+
+			<!-- 呼び出しトレースによる限定：JUnit の結果メッセージ -->
+			<includeTrace className="com.intellij.execution.testframework.ui.TestStatusLine"/>
+
+			<!-- 呼び出しトレースによる限定：ブレークポイントのプロパティー > Any exception -->
+			<includeTrace className="com.intellij.xdebugger.impl.breakpoints.XBreakpointItem"/>
+
+			<!-- 呼び出しトレースによる限定：Gradle タスク右クリック > Choose a task to 〜 -->
+			<includeTrace className="com.intellij.openapi.keymap.impl.ui.ActionsTree$KeymapsRenderer"
+						  methodName="append"/>
+
+			<!-- 呼び出しトレースによる限定：設定 > ツール > ダイアグラム > ツリー -->
+			<includeTrace className="com.intellij.uml.settings.tree.DiagramSettingsTreeRenderer"/>
+
+			<!-- 呼び出しトレースによる限定：REST クライアントのタブ > Response、Request -->
+			<includeTrace className="com.intellij.ws.rest.client.RESTClient"/>
+
+			<!-- 呼び出しトレースによる限定：プロジェクト設定 > ファセット > ファセット名 -->
+			<includeTrace className="com.intellij.openapi.roots.ui.configuration.projectRoot.FacetStructureConfigurable"
+				methodName="reset" limit="0"/>
+
+			<!-- 呼び出しトレースによる限定：設定 > プラグイン > 更新タブ内のメッセージ -->
+			<includeTrace className="com.intellij.ide.plugins.PluginManagerConfigurableNew"/>
+
+			<!-- 呼び出しトレースによる限定：設定 > 外観 & 振る舞い > メニューおよびツールバー -->
+			<includeTrace className="com.intellij.ide.ui.customization.CustomizableActionsPanel"/>
+
+			<!-- 呼び出しトレースによる限定：Git コミットダイアログ > ファイルツリー > Unversioned Files -->
+			<includeTrace className="com.intellij.openapi.vcs.changes.ui.ChangesBrowserSpecificFilesNode"/>
+
+			<!-- 呼び出しトレースによる限定：Git コミットダイアログ > 1 added -->
+			<includeTrace className="com.intellij.openapi.vcs.changes.ui.CommitLegendPanel"/>
+
+			<!-- 呼び出しトレースによる限定：パス内検索 > タブ:Preview -->
+			<!-- → build.gradle のエディタータブが訳されるため含めてはいけない - JBTabsPaneImpl で対応
+			<includeTrace className="com.intellij.ui.tabs.impl.TabLabel"/> -->
+
+			<!-- 呼び出しトレースによる限定：Android デバイス選択肢 -->
+			<!-- → LogCar のプロセス選択が xxx.debug などになるため廃止 -->
+			<!-- <includeTrace className="com.android.tools.idea.ddms"/> -->
+
+			<!-- 呼び出しトレースによる限定：Android 実行 > 構成の編集 > ターゲット選択プルダウン など -->
+			<includeTrace className="com.android.tools.idea.run.editor"/>
+
+		</jointPoint>
+
+		<!-- ダイアログのタイトル -->
+		<jointPoint className="com.intellij.openapi.ui.impl.DialogWrapperPeerImpl" methodName="setTitle">
+
+			<!-- 呼び出しトレースによる除外：デバッグ > 配列 > 範囲の調整ダイアログのタイトル (変数名) -->
+			<excludeTrace className="com.intellij.debugger.actions.AdjustArrayRangeAction"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) - メニュー、ボタン、チェックボックスなど -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			final String PREFIX = "%PLEIADES_EXCLUDE%";
+			if ($1 == null)
+				;
+			else if ($1.startsWith(PREFIX))
+				$1 = $1.substring(PREFIX.length());
+			// チェックボックスやラジオボタン、クラスが JButton の場合は除外定義を使用しない
+			else if (
+				$0 instanceof javax.swing.JToggleButton ||
+				$0.getClass().getName().equals("javax.swing.JButton") ||
+				$0.getClass().getName().endsWith(".ClickableLabel") // Android 実行構成 > プロファイリング
+			)
+				$1 = ?{translation.class}.translate($1, null);
+			// JMenuItem (git コミットダイアログのコミットボタンメニュー)
+			else if ($1.endsWith("..."))
+				$1 = ?{translation.class}.translate($1, null);
+			// ----- ↓高速化のため使用しない (JOINT_POINT を渡さない限り除外定義は使用されない) -----
+			// JMenuItem、JButton サブクラス (コンボなど) の場合は除外定義を使用する
+			//else
+			//	?{translation.class}.printStackTrace($1, ?{JOINT_POINT});
+			//	$1 = ?{translation.class}.translate($1, ?{JOINT_POINT});
+		]]></advice>
+
+		<!-- Swing ボタン (高速化と訳しすぎ防止のため excludeTrace は使用しない) -->
+		<jointPoint className="javax.swing.AbstractButton" methodName="setText"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) エディタータブの "[プロジェクト名] パス" の形式は翻訳しない -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if ($1 != null && !$1.matches("\\[.+\\] .+"))
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<!-- Swing ツールチップ -->
+		<jointPoint className="javax.swing.JComponent" methodName="setToolTipText"/>
+
+		<!-- ツールチップ (リファクタリング > インライン化 などのエラーメッセージ) -->
+		<jointPoint className="com.intellij.ide.IdeTooltipManager" methodName="initPane"
+					descriptor="(Ljava/lang/String;Lcom/intellij/ui/HintHint;Ljavax/swing/JLayeredPane;)Ljavax/swing/JEditorPane;"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) コロンの前のみ翻訳 (Current Branch: ブランチ名) -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			String[] sp = ($1 == null) ? (String[]) null : $1.split(":");
+			if (sp != null && sp.length == 2)
+				$1 = ?{translation.class}.translateIgnoreMnemonic(sp[0], null) + ":" + sp[1];
+			else
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<!-- 右下 Git クリック時のポップアップ -->
+		<jointPoint className="com.intellij.ui.popup.AbstractPopup" methodName="setAdText"
+					descriptor="(Ljava/lang/String;I)V"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) コミットダイアログの browse リンク -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if ($2 == com.intellij.ui.SimpleTextAttributes.LINK_ATTRIBUTES)
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<jointPoint className="com.intellij.ui.ColoredTreeCellRenderer" methodName="append"
+			descriptor="(Ljava/lang/String;Lcom/intellij/ui/SimpleTextAttributes;Z)V"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数) 呼び出しトレースによる除外なし - モジュール名を示す、末尾 [] 内は翻訳しない -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			int pos = ($1 != null) ? $1.indexOf("[") : -1;
+			if (pos != -1)
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1.substring(0, pos), null) + $1.substring(pos, $1.length());
+			else
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+		]]></advice>
+
+		<!-- 下部プログレスバー -->
+		<jointPoint className="com.intellij.openapi.progress.util.AbstractProgressIndicatorExBase" methodName="setText"/>
+		<jointPoint className="com.intellij.openapi.progress.util.AbstractProgressIndicatorExBase" methodName="setText2"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・1 引数) 呼び出しトレースによる除外あり - 編集不可の場合のみ -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if (!$0.isEditable())
+				$1 = ?{translation.class}.translateIgnoreMnemonic($1, ?{JOINT_POINT});
+		]]></advice>
+
+		<!-- Swing エディター・ペイン (HTML ラベル) -->
+		<jointPoint className="javax.swing.JEditorPane" methodName="setText">
+
+			<!-- 呼び出しトレースによる除外：データベース結果 > クエリーの表示 > 内容表示 (Click to refresh) -->
+			<excludeTrace className="com.intellij.codeInsight.documentation.DocumentationComponent"/>
+
+		</jointPoint>
+
+		<!-- Swing テキストコンポーネント -->
+		<jointPoint className="javax.swing.text.JTextComponent" methodName="setText">
+
+			<!-- 呼び出しトレースによる除外：モジュール右クリック > 分析 > モジュール依存関係の分析 > モジュール名 -->
+			<excludeTrace className="com.intellij.moduleDependencies.ModulesDependenciesPanel"/>
+
+			<!-- 呼び出しトレースによる除外：ツール > 外部ツール > 追加 > マクロダイアログ > プレビュー -->
+			<excludeTrace className="com.intellij.ide.macro.MacrosDialog"/>
+
+			<!-- 呼び出しトレースによる除外：VCS > プロジェクトの更新 > Subversion ダイアログ -->
+			<excludeTrace className="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialog"/>
+
+			<!-- 呼び出しトレースによる除外：Android UI デザイナ > 選択後の表示 : gravity -->
+			<excludeTrace className="com.android.tools.idea.uibuilder.property.editors.NlFlagsEditor"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 検索結果 v2017 (before・第 1 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if ($1 != null)
+				$1 = $1.replaceAll("(\\d+\\+? 件一致) in (\\d+\\+? ファイル)", "$2中 $1");
+		]]></advice>
+
+		<!-- パス内検索の検索条件テキスト右側 : 'n 件一致 in n ファイル' -->
+		<jointPoint className="com.intellij.find.SearchTextArea" methodName="setInfoText"/>
+
+	</pointCut>
+
+	<!-- 検索結果 v2016 (before・第 2 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			if ($2 != null && ($2.startsWith("Preview") || $2.contains("件一致 in ")))
+				$2 = $2
+					.replaceAll("(.+\\()(\\S+ 件一致) in (\\S+ ファイル)(\\))", "$1$3中 $2$4")
+					.replace("Preview", "プレビュー");
+		]]></advice>
+
+		<!-- パス内検索結果のプレビュータブ : 'Preview (n 件一致 in n ファイル)' -->
+		<jointPoint className="com.intellij.ui.JBTabsPaneImpl" methodName="setTitleAt"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 2 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$2 = ?{translation.class}.translateIgnoreMnemonic($2, null);
+		]]></advice>
+
+		<!-- エディター部の初期表示のショートカット説明 -->
+		<jointPoint className="com.intellij.openapi.fileEditor.impl.EditorEmptyTextPainter" methodName="appendLine"/>
+		<jointPoint className="com.intellij.openapi.fileEditor.impl.EditorEmptyTextPainter" methodName="appendAction"/>
+
+		<!-- 設定 > ツール > リモート SSH 外部ツール > ＋ > マクロの挿入 -->
+		<jointPoint className="com.intellij.ide.macro.EditorMacro" methodName="EditorMacro"
+					descriptor="(Ljava/lang/String;Ljava/lang/String;)V"/>
+
+		<!-- お気に入りのリストラベル (Bookmarks、Breakpoints) -->
+		<jointPoint className="com.intellij.ide.favoritesTreeView.AbstractFavoritesListProvider"
+					methodName="AbstractFavoritesListProvider"
+					descriptor="(Lcom/intellij/openapi/project/Project;Ljava/lang/String;Ljava/lang/String;)V"/>
+
+		<!-- Android 実行構成ダイアログのエラーメッセージ -->
+		<jointPoint className="com.android.tools.idea.run.ValidationError" methodName="ValidationError"/>
+
+		<!-- Android AVD 一覧右クリック -->
+		<jointPoint className="com.android.tools.idea.avdmanager.AvdUiAction" methodName="AvdUiAction"/>
+
+		<!-- Android メッセージビューの Gradle メッセージ  -->
+		<jointPoint className="com.android.ide.common.blame.Message" methodName="Message"/>
+
+		<!-- 設定 > プラグイン > ヘッダ (第 1 引数対応もあり) -->
+		<jointPoint className="com.intellij.ide.plugins.PluginManagerConfigurableNew$CountTabName" methodName="CountTabName"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・1 2 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+			$2 = ?{translation.class}.translateIgnoreMnemonic($2, null);
+		]]></advice>
+
+		<!-- 分析 > 各分析ダイアログの分析名 -->
+		<jointPoint className="com.intellij.analysis.BaseAnalysisAction" methodName="BaseAnalysisAction"/>
+
+		<!-- ダイアログ Windows (設定 > 外観 & 振る舞い > システム設定 > HTTP プロキシー > テスト など) -->
+		<jointPoint className="com.intellij.openapi.ui.Messages$MessageDialog" methodName="_init"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・1 2 3 引数) 呼び出しトレースによる除外なし - 第 3 引数が句読点の場合は除去 -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+			$2 = ?{translation.class}.translateIgnoreMnemonic($2, null);
+			if ($3.equals(".") || $3.equals(".)"))
+				$3 = "";
+			else
+				$3 = ?{translation.class}.translateIgnoreMnemonic($3, null);
+		]]></advice>
+
+		<!-- ハイパーリンクテキスト -->
+		<jointPoint className="com.intellij.ui.HyperlinkLabel" methodName="setHyperlinkText"
+			descriptor="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・1 6 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<!--
+			第 2 引数を翻訳すると表示されなくなる： 設定 > エディター > カラー・スキームの切り替え > 一般 > ツリー
+			//$2 = ?{translation.class}.translateIgnoreMnemonic($2, null);
+		-->
+		<advice><![CDATA[
+			$1 = ?{translation.class}.translateIgnoreMnemonic($1, null);
+			$6 = ?{translation.class}.translateIgnoreMnemonic($6, null);
+		]]></advice>
+
+		<!-- 設定 > エディター > 色とフォント > ツリー -->
+		<jointPoint className="com.intellij.application.options.colors.ColorAndFontDescription"
+			methodName="ColorAndFontDescription"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・2 3 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$2 = ?{translation.class}.translateIgnoreMnemonic($2, null);
+			$3 = ?{translation.class}.translateIgnoreMnemonic($3, null);
+		]]></advice>
+
+		<!-- 通知 -->
+		<jointPoint className="com.intellij.notification.Notification" methodName="Notification"
+			descriptor="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/intellij/notification/NotificationType;Lcom/intellij/notification/NotificationListener;)V"/>
+
+		<!-- ダイアログ Mac (設定 > 外観 & 振る舞い > システム設定 > HTTP プロキシー > テスト など) -->
+		<jointPoint className="com.intellij.ui.messages.SheetMessage" methodName="SheetMessage"/>
+
+		<!-- 設定 > ビルド > ビルドツール > JDK プルダウン -->
+		<jointPoint className="com.intellij.openapi.externalSystem.service.ui.ExternalSystemJdkComboBox$JdkComboBoxItem"
+					methodName="JdkComboBoxItem"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・3 4 5 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$3 = ?{translation.class}.translateIgnoreMnemonic($3, null);
+			$4 = ?{translation.class}.translateIgnoreMnemonic($4, null);
+			$5 = ?{translation.class}.translateIgnoreMnemonic($5, null);
+		]]></advice>
+
+		<!-- 通知 -->
+		<jointPoint className="com.intellij.notification.Notification" methodName="Notification"
+					descriptor="(Ljava/lang/String;Ljavax/swing/Icon;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/intellij/notification/NotificationType;Lcom/intellij/notification/NotificationListener;)V"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・4 5 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$4 = ?{translation.class}.translateIgnoreMnemonic($4, null);
+			$5 = ?{translation.class}.translateIgnoreMnemonic($5, null);
+		]]></advice>
+
+		<!-- エディター上の警告ホバー (Redundant character escape など) -->
+		<jointPoint className="com.intellij.lang.annotation.Annotation" methodName="Annotation"/>
+
+		<!-- Gist ダイアログ内の説明 -->
+		<jointPoint className="org.jetbrains.plugins.github.authentication.ui.GithubLoginDialog" methodName="GithubLoginDialog"
+					descriptor="(Lcom/intellij/openapi/project/Project;Ljava/awt/Component;Lkotlin/jvm/functions/Function2;Ljava/lang/String;Ljava/lang/String;)V"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 4 引数) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			$4 = ?{translation.class}.translateIgnoreMnemonic($4, null);
+		]]></advice>
+
+		<!-- ガターのツールチップ Click or press x to navigate -->
+		<jointPoint className="com.intellij.codeInsight.daemon.impl.GutterIconTooltipHelper" methodName="composeText"
+					descriptor="(Ljava/lang/Iterable;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (before・第 1 引数、List<String>) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			for (int i = 0; i < $1.size(); i++) {
+				String s = ?{translation.class}.translateIgnoreMnemonic($1.get(i), null);
+				$1.set(i, s);
+			}
+		]]></advice>
+
+		<!-- 使用箇所の検索 -->
+		<jointPoint className="com.intellij.usages.impl.SearchForUsagesRunnable" methodName="wrapInHtml"/>
+
+	</pointCut>
+
+	<!--
+	===========================================================================
+	  after
+	===========================================================================
+	-->
+
+	<!--
+	起動時の例外抑止の翻訳しない (下記除外定義だと起動時に複数回呼ばれ、スタックトレースで遅いため)
+	%EXCLUDE%Constructor=idea:com.intellij.codeInspection.ex.InspectionToolWrapper
+	-->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			return "Constructor";
+		]]></advice>
+
+		<jointPoint className="com.google.gct.idea.appengine.validation.ConstructorInspection"
+					methodName="getShortName"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (after) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			return ?{translation.class}.translateUnderscoreMnemonic($_, null);
+		]]></advice>
+
+		<!-- Run 〜 with Coverage (Presentation#setText が呼ばれないため) -->
+		<jointPoint className="com.intellij.coverage.CoverageExecutor" methodName="getStartActionText"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (after) 呼び出しトレースによる除外なし、ニーモニックなし -->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			return ?{translation.class}.translateIgnoreMnemonic($_, null);
+		]]></advice>
+
+		<!-- ツール・ウィンドウのストライプ・ボタン -->
+		<jointPoint className="com.intellij.openapi.wm.impl.ToolWindowImpl" methodName="getStripeTitle"/>
+
+		<!-- 設定 > ツリー (LangExtensions.xml などに定義されている displayName 属性) -->
+		<jointPoint className="com.intellij.openapi.options.ex.ConfigurableWrapper" methodName="getDisplayName"/>
+
+		<!-- インスペクションのメッセージ -->
+		<jointPoint className="com.intellij.codeInspection.ProblemDescriptorUtil" methodName="renderDescriptionMessage"
+			descriptor="(Lcom/intellij/codeInspection/CommonProblemDescriptor;Lcom/intellij/psi/PsiElement;I)Ljava/lang/String;"/>
+
+		<!-- インテンションのメッセージ -->
+		<jointPoint className="com.intellij.codeInsight.intention.impl.IntentionListStep" methodName="getTextFor"/>
+
+		<!-- プロジェクトウィンドウのスコープ選択コンボ -->
+		<!-- スコープは自分で定義できるため廃止 2017.11.09
+		<jointPoint className="com.intellij.ui.content.impl.ContentImpl" methodName="getTabName"/>
+		-->
+
+		<!-- ツールウィンドウ -->
+		<!-- gradle 実行時「Pleiades [build]」が訳されるため廃止 2018.08.06
+		<jointPoint className="com.intellij.ui.content.impl.ContentImpl" methodName="getToolwindowTitle"/>
+		-->
+		<jointPoint className="com.intellij.ui.content.impl.ContentImpl" methodName="getDescription"/>
+
+		<!-- インスペクション結果 (左ツリー) > インペクション表示名 -->
+		<jointPoint className="com.intellij.codeInspection.InspectionEP" methodName="getLocalizedString"/>
+
+		<!-- 使用箇所の検索で見つからない場合 - <br><a ...>Find Options... -->
+		<jointPoint className="com.intellij.usages.impl.SearchForUsagesRunnable" methodName="createOptionsHtml"/>
+
+		<!-- ガター行ツールチップ (Android Studio のアクティビティー '関連 XML ファイル') -->
+		<jointPoint className="com.intellij.codeInsight.daemon.LineMarkerInfo" methodName="getLineMarkerTooltip"/>
+
+		<!-- 設定 > 外観 & 振る舞い > 通知 > プルダウン (enum) -->
+		<jointPoint className="com.intellij.notification.NotificationDisplayType" methodName="getTitle"/>
+
+		<!-- インスペクション結果 (左ツリー) > n warnings (ソースメソッド名 getPresentableName) -->
+		<jointPoint className="com.intellij.codeInspection.ui.InspectionTreeTailRenderer" methodName="a"
+					descriptor="(Lcom/intellij/codeHighlighting/HighlightDisplayLevel;Z)Ljava/lang/String;"/>
+		<jointPoint className="com.intellij.codeInspection.ui.InspectionTreeTailRenderer" methodName="getPresentableName"/>
+
+		<!-- モジュール > 実行 > All Tests (TestNG) -->
+		<jointPoint className="com.theoryinpractice.testng.model.TestNGTestPackage" methodName="getActionName"/>
+
+		<!-- ファイル削除確認ダイアログの file、directory、element など -->
+		<jointPoint className="com.intellij.ide.util.DeleteTypeDescriptionLocation$DefaultProvider"
+			methodName="getElementDescription"/>
+
+		<!-- キーマップ > リモート外部ツール (Group コンストラクタだと Ant プロジェクト名が翻訳されるため) -->
+		<jointPoint className="com.jetbrains.plugins.remotesdk.tools.RemoteToolKeymapExtension" methodName="getGroupName"/>
+
+		<!-- 設定 > プラグイン > ボタンラベル -->
+		<jointPoint className="com.intellij.ide.plugins.PluginHeaderPanel$1" methodName="getText"/>
+
+		<!-- インテンションダイアログ > ツリーのインテンション名 -->
+		<jointPoint className="com.intellij.codeInsight.intention.impl.config.IntentionActionWrapper"
+					methodName="getFamilyName"/>
+
+		<!-- Vim 設定 > その他 > Vim エミュレーション > プルダウン (enum) -->
+		<jointPoint className="com.maddyhome.idea.vim.key.ShortcutOwner" methodName="toString"/>
+
+		<!-- Android モジュール設定 (Android Studio) > 左ツリー -->
+		<jointPoint className="com.android.tools.idea.gradle.structure.AndroidProjectStructureConfigurable$SidePanel$1"
+					methodName="getTextFor"/>
+
+		<!-- Android 設定 > 外観 > システム設定 > Android SDK > 状況 (Installed、Not installed) -->
+		<jointPoint className="com.android.tools.idea.updater.configure.StatusColumnInfo" methodName="valueOf"/>
+
+		<!-- IDE Features Trainer: モジュール説明 -->
+		<jointPoint className="training.learn.XmlModule" methodName="getDescription"/>
+		<jointPoint className="training.learn.XmlModule" methodName="getName"/>
+		<jointPoint className="training.learn.lesson.XmlLesson" methodName="getName"/>
+		<jointPoint className="training.learn.lesson.kimpl.KLesson" methodName="getName"/>
+		<jointPoint className="training.learn.LearnBundle" methodName="message"/>
+
+	</pointCut>
+
+	<!-- XML 入力ストリーム (after) 呼び出しトレースによる除外なし、ニーモニックなし -->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			return ?{translation.class}.translate($_, null,
+				new String[] {
+					"(<Try .+?>\s*)(.+?)(\s*</Try>)",
+					"(<Text>\s*)(.+?)(\s*</Text>)"
+				}
+			);
+		]]></advice>
+
+		<!-- IDE Features Trainer: XML の Try タグ定義 -->
+		<jointPoint className="training.util.DataLoader" methodName="getResourceAsStream"/>
+
+	</pointCut>
+
+	<!-- 翻訳 (after) 呼び出しトレースによる除外あり、ニーモニックなし -->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			return ?{translation.class}.translateIgnoreMnemonic($_, ?{JOINT_POINT});
+		]]></advice>
+
+		<!-- ビューのタイトル、ビューのタブ -->
+		<jointPoint className="com.intellij.ui.content.impl.ContentImpl" methodName="getDisplayName">
+
+			<!-- 呼び出しトレースによる除外：Gradle 実行ビューのタイトル (タスク名) -->
+			<excludeTrace className="com.intellij.ui.content.impl.ContentManagerImpl" methodName="addSelectedContent"/>
+			<excludeTrace className="com.intellij.execution.ui.RunContentManagerImpl" limit="0"/>
+
+		</jointPoint>
+
+	</pointCut>
+
+	<!-- 翻訳 (after) 実行構成ツリー -->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			if ($1 instanceof com.intellij.execution.configurations.ConfigurationType)
+				$_ = ?{translation.class}.translateIgnoreMnemonic($_, null);
+		]]></advice>
+
+		<!-- 実行構成 > Defaults ツリー配下 (ソースメソッド名 getName) -->
+		<jointPoint className="com.intellij.execution.impl.RunConfigurable" methodName="b"
+					descriptor="(Ljava/lang/Object;)Ljava/lang/String;"/>
+
+	</pointCut>
+
+	<!-- 設定 (after フォントサンプル) 呼び出しトレースによる除外なし -->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			return $_.replaceFirst("\n\n\n$", "") +
+				"色は匂へど散りぬるを我が世誰そ常ならむ\n" +
+				"== != === !== >= <= && || ++ -- =>\n" +
+				"\n\n";
+		]]></advice>
+
+		<!-- 設定 > エディター > 色とフォント > フォント > サンプル -->
+		<jointPoint className="com.intellij.application.options.colors.FontEditorPreview" methodName="getIDEDemoText"/>
+
+	</pointCut>
+
+	<!-- デバッグ (after) ツールウィンドウ id (ResourceBundle 翻訳で id 指定して除外) -->
+	<!--
+	<pointCut editPoint="execution" timing="after" level="debug">
+		<advice><![CDATA[
+			?{translation.class}.debug("ToolWindowManager#getToolWindow: " + $1 + " -> " + $_);
+			return $_;
+		]]></advice>
+		<jointPoint className="com.intellij.openapi.wm.impl.ToolWindowManagerImpl" methodName="getToolWindow"/>
+	</pointCut>
+	-->
+
+	<!--
+    ###########################################################################
+	  デバッグ
+    ###########################################################################
+	-->
+
+	<!-- 時間計測ログ -->
+	<pointCut editPoint="call" timing="around" level="debug">
+		<advice><![CDATA[
+			?{analyses.class}.start(?{TARGET_STRING});
+			$_ = $proceed($$);
+			?{analyses.class}.end(?{TARGET_STRING});
+		]]></advice>
+		<jointPoint className="jp.sourceforge.mergedoc.pleiades"/>
+	</pointCut>
+
+	<!-- デバッグ (before) [呼び出し部分] -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			?{translation.class}.debug($1, ?{JOINT_POINT});
+			$_ = $proceed($$);
+		]]></advice>
+	</pointCut>
+
+	<!-- デバッグ (after) [呼び出し部分] -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			$_ = $proceed($$);
+			?{translation.class}.debug($_, ?{JOINT_POINT});
+		]]></advice>
+	</pointCut>
+
+	<!-- デバッグ (before-after) [呼び出し部分] -->
+	<pointCut editPoint="call" timing="around">
+		<advice><![CDATA[
+			?{translation.class}.debug($1, ?{JOINT_POINT});
+			$_ = $proceed($$);
+			?{translation.class}.debug($_, ?{JOINT_POINT});
+		]]></advice>
+	</pointCut>
+
+	<!-- デバッグ (before・引数指定なし) -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			?{translation.class}.debug(null, ?{JOINT_POINT});
+		]]></advice>
+	</pointCut>
+
+	<!-- デバッグ (before・第 1 引数) -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			?{translation.class}.debug($1, ?{JOINT_POINT});
+		]]></advice>
+	</pointCut>
+
+	<!-- デバッグ (before・第 2 引数) -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			?{translation.class}.debug($2, ?{JOINT_POINT});
+		]]></advice>
+	</pointCut>
+
+	<!-- デバッグ (before・第 3 引数) -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			?{translation.class}.debug($3, ?{JOINT_POINT});
+		]]></advice>
+	</pointCut>
+
+	<!-- デバッグ (before・第 4 引数) -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			?{translation.class}.debug($4, ?{JOINT_POINT});
+		]]></advice>
+	</pointCut>
+
+	<!-- デバッグ (after) -->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			?{translation.class}.debug($_, ?{JOINT_POINT});
+			return $_;
+		]]></advice>
+	</pointCut>
+
+	<!-- スタックトレース (after) -->
+	<pointCut editPoint="execution" timing="after">
+		<advice><![CDATA[
+			?{translation.class}.printStackTrace($_, ?{JOINT_POINT});
+			return $_;
+		]]></advice>
+	</pointCut>
+
+	<!-- スタックトレース (before) -->
+	<pointCut editPoint="execution" timing="before">
+		<advice><![CDATA[
+			?{translation.class}.printStackTrace($1, ?{JOINT_POINT});
+		]]></advice>
+	</pointCut>
+
+	<!--
+    ###########################################################################
+	  翻訳トレース (Pleiades 起動オプション debug 時のみ有効)
+    ###########################################################################
+    TraceConfig 参照
+	-->
+
+	<property name="trace.pattern" value=""/>
+	<property name="trace.is.ja" value="false"/>
+	<property name="trace.disabled" value="true"/>
+	<property name="log.desc.class" value=""/>
+
+</pleiades>

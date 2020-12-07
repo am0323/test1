@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="jp.sourceforge.mergedoc.pleiades"
+   name="%pluginName"
+   version="2020.11.01"
+   provider-name="%providerName">
+
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="jp.sourceforge.mergedoc.pleiades.toolbar"
+               label="Common">
+            <command
+                  commandId="org.eclipse.ui.window.preferences"
+                  icon="icons/preferences.png"
+                  tooltip="Preferences"
+                  label="Preferences">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.eclipse.ui.window.preferences"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="F10">
+      </key>
+   </extension>
+
+</plugin>

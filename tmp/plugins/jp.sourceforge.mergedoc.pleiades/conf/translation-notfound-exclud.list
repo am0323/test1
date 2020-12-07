@@ -1,0 +1,249 @@
+###################################################################################################
+#
+# Copyright (c) 2005- Shinji Kashihara. All rights reserved.
+# orgThis program and the accompanying materials are
+# made available under the terms of the Eclipse Public License v1.0 which
+# accompanies this distribution, and is available at epl-v10.html.
+#
+###################################################################################################
+#
+# Pleiades 未翻訳ログ出力除外リスト
+#
+###################################################################################################
+
+#------------------------------------------------------------------------------
+# 正規表現
+#------------------------------------------------------------------------------
+%REGEX%%[a-zA-Z].+
+%REGEX%(?s)Copyright \([cC]\).+
+%REGEX%(\w+[\.,])+\w+
+%REGEX%.+ singleton:{0,1}=true
+%REGEX%ALT\+. CTRL\+.
+%REGEX%CTRL\+. .
+%REGEX%CTRL\+. CTRL\+.
+%REGEX%ESC .
+%REGEX%ESC . CTRL\+.
+%REGEX%ESC ..
+%REGEX%ESC SHIFT\+.
+%REGEX%[\w_/]\.gif
+%REGEX%\d+ \w+\.\w+  \[\w+\]
+%REGEX%\d\.\d\.\d\.r\d+_v\d+-[\w-]+
+%REGEX%\d\.\d\.\d\.v\d+m-[\w-]+
+%REGEX%\w+ - \w+\.\w+ - Eclipse SDK
+%REGEX%\w+\.\w+ - Eclipse SDK
+%REGEX%http://[\w/\.]+
+%REGEX%org\.eclipse\..+
+%REGEX%jar:file:/.+
+
+#------------------------------------------------------------------------------
+# 固定文字列
+#------------------------------------------------------------------------------
+*.dictionary
+*.xml
+/org.eclipse.jdt.doc.user/reference/ref-123b.htm
+<TAB>
+<p>%template.editor.desc%</p>
+<p>%template.helloWorld.desc%</p>
+<p>%template.help.desc%</p>
+<p>%template.multiPageEditor.desc%</p>
+<p>%template.newWizard.desc%</p>
+<p>%template.popupMenus.desc%</p>
+<p>%template.preferences.desc%</p>
+<p>%template.propertyPages.desc%</p>
+<p>%template.view.desc%</p>
+ASCII
+ASCII -kk
+ASCII -kkv
+ASCII -kkvl
+ASCII -ko
+ASCII -kv
+Alt
+Ant
+Apache
+Apache Axis
+Apache Tomcat
+Apache Tomcat v3.2
+Apache Tomcat v4.0
+Apache Tomcat v4.1
+Apache Tomcat v5.0
+Apache Tomcat v5.5
+Authenticator
+BEA
+BIG5
+Backspace
+Button 1
+CDC-1.0/Foundation-1.0,J2SE-1.3
+CSS
+CVS
+CVS diff
+Camino
+ConnectionMethods
+Courier-regular-10
+Ctrl
+DB2 UDB
+DTD
+Derby
+EJB
+EMF XMI
+EMF XML
+EOF
+EUC-JP
+EUC-KR
+Eclipse Platform\n\nVersion: 3.1.0\nBuild id: {0}\n\n(c) Copyright Eclipse contributors and others 2000, 2005.  All rights reserved.\nVisit http://www.eclipse.org/platform\n\nThis product includes software developed by the\nApache Software Foundation http://www.apache.org/
+Eclipse RCP
+Eclipse SDK
+Eclipse SDK\n\nVersion: 3.1.0\nBuild id: {0}\n\n(c) Copyright Eclipse contributors and others 2000, 2005.  All rights reserved.\nVisit http://www.eclipse.org/platform\n\nThis product includes software developed by the\nApache Software Foundation http://www.apache.org/
+Eclipse.org
+Emacs
+Enter
+Enums
+Esc
+FileModificationValidator
+Firefox
+GB18030
+GEO
+Galeon
+Google
+HTML
+HTML Firefox Mozilla Netscape Internet Opera Safari
+HTTP
+Hello RCP
+Hello, World
+IANA:
+IBM
+IBM WebSphere v6.0
+ISO-2022-JP
+ISO-2022-KR
+ISO-8859-2
+ISO-8859-3
+ISO-8859-4
+ISO-8859-5
+ISO-8859-5
+ISO-8859-6
+ISO-8859-7
+ISO-8859-8
+ISO-8859-9
+ISO\ Latin-1
+Id
+Informix
+Internet Explorer
+J2EE
+J2EE - Eclipse SDK
+J2SE 5.0
+J2SE-1.4
+J2SE-1.4,CDC-1.0/Foundation-1.0,J2SE-1.3
+J2SE-1.4,OSGi/Minimum-1.0
+JBoss
+JBoss v3.2.3
+JOnAS v4
+JRE
+JSP
+JUnit
+Java
+Java - Eclipse SDK
+Java(J)...
+Java...
+JavaScript
+Javadoc
+Javadoc:
+KB
+Konqueror
+Lucida Console-regular-9
+MMMMMMMMMMMM
+MS932
+Mac OS 9
+MacOS 9
+MacOS 9(M)
+Mozilla
+MySql
+NAICS
+Netscape
+Netscape Communicator v4.x
+Netscape v7.x
+OK
+ObjectWeb
+Opera
+Oracle
+PDE
+Remove LaunchpreferenceKeywords.viewManagement=views
+Root_
+RuntimeInvisibleAnnotations:
+RuntimeInvisibleParameterAnnotations:
+RuntimeVisibleAnnotations:
+RuntimeVisibleParameterAnnotations:
+SWT
+Shift
+Shift+Tab
+Shift_JIS
+SimpleProjectFirstPage
+Space
+Swing
+Sybase
+TCP/IP
+TIS-620
+Tab
+Tomcat
+UML
+URI:
+URL
+US-ASCII
+US\ ASCII
+UTF-16
+UTF-16BE
+UTF-16LE
+UTF-8
+UTF-8 (BOM)
+UTF-8\ (BOM)
+Unix
+Unix(U)
+VM
+WCSS 1.0
+WSIL
+Web
+Windows
+Windows(W)
+XDoclet
+XMI
+XSL
+[pc: {0}, same_extended]
+abcdefghijklmnopqrstuvwxyz1234567890-=[]\;/
+bundleentry
+bundleresource
+codetemplates.xml
+ejbdoclet
+equals()
+etool16/ignorews_edit.gif
+false
+hashCode()
+ok
+ok {0}
+org.eclipse.core.resources is not activated
+org.eclipse.jdi.internal.VirtualMachineManagerImpl
+pluginName
+providerName
+splashscreen
+splashstream
+synchronized
+systembundle
+true
+webdoclet
+windows-1255
+windows-1256
+{0} <Class {2}> [{1}]
+{0} <Double {2}> [{1}]
+{0} <Float {2}> [{1}]
+{0} <Integer {2}> [{1}]
+{0} <Long {2}> [{1}]
+{0} <String "{2}"> [{1}]
+{0} GB
+{0} KB
+{0} MB
+{0} boolean [{1}]
+{0} byte [{1}]
+{0} char [{1}]
+{0} double [{1}]
+{0} float [{1}]
+{0} int [{1}]
+{0} long [{1}]
+{0} short [{1}]
+{0} {3} [{1}] [nargs: {2}]

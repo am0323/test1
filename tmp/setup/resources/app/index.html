@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pleiades 日本語化プラグインのセットアップ</title>
+  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min_paper.css" />
+  <link rel="stylesheet" href="renderer.css" />
+</head>
+<body>
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div id="head">
+      <div class="flex">
+        <h1 class="left">Pleiades 日本語化プラグインのセットアップ</h1>
+        <div class="right">
+          <p id="version">
+            <span class="v-label">Ver.</span>
+            <span class="v-value" id="v-value">0000.00.00</span>
+          </p>
+        </div>
+      </div>
+      <p class="desc">
+        <!--
+        日本語化するアプリケーションを選択してください。対象：Eclipse、Spring Tool Suite などの
+        Eclipse ベースの IDE。<br>
+        IntelliJ、Android Studio などの IDEA ベースの IDE の日本語化は
+        <a onclick="return urlOpen('https://plugins.jetbrains.com/plugin/13964-japanese-language-pack-eap');">
+        JetBrains の純正日本語パック</a>を使用してください。
+        -->
+        日本語化するアプリケーションを選択してください。対象：Eclipse、Spring Tool Suite などの Eclipse ベースの
+        IDE、Android Studio、IntelliJ、PhpStorm、PyCharm、RubyMine、その他 Jetbrains デスクトップ製品
+      </p>
+    </div>
+  </nav>
+  <form>
+    <div class="form-group" id="filePathGroup">
+      <label class="control-label" for="filePath">日本語化するアプリケーション</label>
+      <div class="input-group">
+        <input id="filePath" type="text" class="form-control input-lg" disabled>
+        <span class="input-group-btn">
+          <button id="selectButton" class="btn btn-primary btn-lg">選択...</button>
+        </span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label" for="filePath">Pleiades が配置されるディレクトリ</label>
+      <input id="destPath" type="text" class="form-control input-lg" disabled>
+    </div>
+    <div class="form-group">
+      <label class="control-label" for="filePath">Pleiades の設定が追加されるファイル</label>
+      <input id="iniPath" type="text" class="form-control input-lg" disabled>
+    </div>
+    <div class="progress">
+      <div class="progress-bar"></div>
+    </div>
+  </form>
+  <footer>
+    <div class="footer_box flex">
+      <div class="left">
+        <a class="btn btn-default" target="_blank" id="openLink"
+          href="http://mergedoc.osdn.jp/">Pleiades ダウンロードサイトを開く</a>
+      </div>
+      <div class="right">
+        <button class="btn btn-primary btn-lg" id="execButton" disabled>日本語化する</button>
+        <button class="btn btn-primary btn-lg" id="quitButton">キャンセル</button>
+      </div>
+    </div>
+  </footer>
+</body>
+<script>window.$ = window.jQuery = require('jquery');</script>
+<script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+<script>require('./renderer.js');</script>
+<script>
+  function urlOpen(url){
+    const {shell} = require('electron');
+    shell.openExternal(url);
+    return false;
+  }
+</script>
+</html>

@@ -1,0 +1,124 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.10.8
+Bundle-SymbolicName: jp.sourceforge.mergedoc.pleiades;singleton:=true
+Bundle-Name: Pleiades
+Bundle-Version: 2020.11.01
+Bundle-Localization: plugin
+Bundle-ManifestVersion: 2
+Bundle-Vendor: MergeDoc Project
+Created-By: 1.8.0_272-b10 (AdoptOpenJDK)
+
+Name: about.properties
+SHA-256-Digest: A96pnYlg2nBz5bR0WSG68O0WKVGWHbJAYhYRLlaQQCs=
+
+Name: plugin.xml
+SHA-256-Digest: 9AtFB/aya1vR7X0wihxDtJWE22oDvIUx7VxpsZ+/2ss=
+
+Name: conf/images/splash4.9.bmp
+SHA-256-Digest: SUEMXj0uwyfEWP48q2LJS8qiRH3Jm2qjObcDXmmxoF4=
+
+Name: conf/pleiades-config.xml
+SHA-256-Digest: lNInrOagvJmpyg2vW6T0aGQz3OD4IXvqCFfH8+vMZ+0=
+
+Name: conf/images/splash4.4.bmp
+SHA-256-Digest: 6GzlqROFhcwk5ry2bBnCxSbQfoiR7CN4M6oG4qQGltA=
+
+Name: conf/translation-exclude-package.properties
+SHA-256-Digest: LYqxeAqkKSBupDTdb6OI98B/GlMjlX1TwvU9UMtOt2s=
+
+Name: conf/pleiades-config-default.xml
+SHA-256-Digest: zTGwJJt4k6xs4uyw6dueTYA9LDVaznOSyRcSKfs6P7E=
+
+Name: conf/.marker
+SHA-256-Digest: oFfJY0My7Y6u+7/5Rgjg5fJrj2SvMrW0kSEbqzEC6P4=
+
+Name: conf/images/splash3.6.bmp
+SHA-256-Digest: VfK1M2pWKqQoLFQ46CehZqqK+7pD10KMT8pvTWNo78o=
+
+Name: icons/preferences.png
+SHA-256-Digest: XFiT6AEPkhX6RTUNL3fJP5cXikTSziK2J7zdp7AN3ww=
+
+Name: conf/translation-converter_sample.properties
+SHA-256-Digest: fhGQg29aQZY6iKO/JJBV3Z4tRkhq8OgPTVAfyj+7wUc=
+
+Name: conf/images/splash4.3.bmp
+SHA-256-Digest: bKb4fziNPe8/Rw0FQ+chiilEJqb9dq6GZ82rpp6y7vY=
+
+Name: conf/translation-first.properties
+SHA-256-Digest: SRebn0KSc5QKYGiP0ptwXkM1XyfWiRV/xH3JZHfpOSM=
+
+Name: conf/images/splash.bmp
+SHA-256-Digest: bGnCo8Wfu/oPEwSXl4yxdGTHBEkTwhiiAJfHqZ8ocfg=
+
+Name: conf/translation-help-exclude.properties
+SHA-256-Digest: bBGhk7fFtOQZtH6ANbNFWf/hwZsy0ykT3EeTepyreRk=
+
+Name: about.ini
+SHA-256-Digest: PlxWLgEJkSOtv4b32uqUn1TD75bh8NXUrCyszKYj48U=
+
+Name: conf/images/splash4.6.bmp
+SHA-256-Digest: MgOBLk5PxybPG0kI2IDoCBep8kB7Zvt+HU+TLK84Zl4=
+
+Name: plugin.properties
+SHA-256-Digest: Bg2pRU9YWgVQEQqVZJEeZ9JIi2lXPOGHrTfOOfJKASQ=
+
+Name: pleiades.jar
+SHA-256-Digest: FSmxYQV/odUX6vdqE4abcPaffxFFVZhATiU9daN7HjI=
+
+Name: conf/images/splash3.5.bmp
+SHA-256-Digest: AKY/oQmHiCd1Z6DR4WMvN/uIdhMfsioHXQSHokR6UOc=
+
+Name: conf/translation-notfound-exclud.list
+SHA-256-Digest: anmT4EhYw/deC5o8WsXWMhHxW4H22UrtRMAB3bu5Q74=
+
+Name: conf/pleiades-config-idea.xml
+SHA-256-Digest: 4k/oPQeKsOUONg0l1Lc/9o4DhdhjQJWTKNsIOZyjWGQ=
+
+Name: about.html
+SHA-256-Digest: pvivFfnEH/qPA6hB/fPPyHCq1xuJbGXevqjTmMZgX3c=
+
+Name: conf/images/splash_clean.png
+SHA-256-Digest: 27soK7dkqjIiP8K9otvBLkyz71GlaBH0Qu5JXZxoHNg=
+
+Name: conf/images/splash4.2.bmp
+SHA-256-Digest: MargX9pgl93CbfBfjHaqBu7n4ETE+h8BwZ/qia5KCg8=
+
+Name: featureImage.png
+SHA-256-Digest: UP22DlznGeV75WB2lB4IDPTMY3QjogUjH5m1u/XfEXg=
+
+Name: conf/images/splash4.7.bmp
+SHA-256-Digest: 0tvdnd+TULpmQQUCNJjHB4MeRKBELpA/RJuFKZArww4=
+
+Name: conf/translation-regex.properties
+SHA-256-Digest: kLrUEom6BDTjT4m+UxX5jIHvLAtkQVAyjRM/h8wJ60k=
+
+Name: conf/translation-regex-through.properties
+SHA-256-Digest: y2asftTJdPFtOn6DNMKICX0YH6pLTqC/h0x7i4VWzu8=
+
+Name: conf/translation.properties
+SHA-256-Digest: 17q72ftr2NAlNgPgWoz6qmPrxMctTEPvp8zPXRjrwxY=
+
+Name: conf/images/splash3.4.bmp
+SHA-256-Digest: kE36SQ54wOYUMMDQ7pHtTbgScrIG27hb5H9844QMV9Y=
+
+Name: conf/images/splash4.8.bmp
+SHA-256-Digest: KqO0eYhUhvsMH3jiBnd8Sx2m8SVEm/w3SByjguMx0SA=
+
+Name: conf/additions/_readme.txt
+SHA-256-Digest: 45cRJOE69vhivS6UoNIIgF2Sh9wl+pbWICuQP7Y0HPk=
+
+Name: conf/translation-override-idea.properties
+SHA-256-Digest: XhG8dCG4xAs9rwc1GgfgTtQzkjqwa8b4PQRFYomec/s=
+
+Name: epl-v10.html
+SHA-256-Digest: T9ZK7tNA1ipkqNpLNx7+D20NdF9NLb76y6hsZG02vHI=
+
+Name: conf/images/splash4.5.bmp
+SHA-256-Digest: uBXzdEBXWVVo6ljjTumA8/eoo0YdFPf8ViHLVMyjHQA=
+
+Name: conf/images/splash3.3.bmp
+SHA-256-Digest: Y1lJZ4veaTISU8pEw4rFXnYoJnzq+q+HL9/LKZlDl9I=
+
+Name: conf/images/splash3.7.bmp
+SHA-256-Digest: Q+OSrjr36niPWJpCVTXkIBMsxZNnjqCrCGbHeMmdQF0=
+

@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.10.8
+Created-By: 1.8.0_272-b10 (AdoptOpenJDK)
+
+Name: pleiades.png
+SHA-256-Digest: kJgn/g0Z6xAavEcbEtF2A1j4uiE6lDHV0Wp+6Kh9vms=
+
+Name: feature.xml
+SHA-256-Digest: a5rZejxMZOaFudi+Dc0i6k5Z5itcBfURHoarcvR5RUE=
+
+Name: feature.properties
+SHA-256-Digest: ePiYRCfNtbYalqGLkP8lNzrVXAAn52VnbD+FRebvY7Q=
+
